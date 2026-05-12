@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="600" height="400" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="clipPath1">
+      <rect x="0" y="0" width="600" height="400" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#clipPath1)">
+    <polyline points="45.6427,370.947 45.6427,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="67.9711,370.947 67.9711,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="90.2996,370.947 90.2996,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="112.6281,370.947 112.6281,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="157.285,370.947 157.285,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="179.6134,370.947 179.6134,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="201.9419,370.947 201.9419,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="224.2703,370.947 224.2703,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="268.9272,370.947 268.9272,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="291.2557,370.947 291.2557,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="313.5841,370.947 313.5841,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="335.9126,370.947 335.9126,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="380.5695,370.947 380.5695,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="402.8979,370.947 402.8979,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="425.2264,370.947 425.2264,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="447.5548,370.947 447.5548,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="492.2117,370.947 492.2117,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="514.5402,370.947 514.5402,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="536.8686,370.947 536.8686,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="559.1971,370.947 559.1971,374.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,357.0192 25.008,357.0192" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,341.5382 25.008,341.5382" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,326.0572 25.008,326.0572" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,295.0953 25.008,295.0953" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,279.6143 25.008,279.6143" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,264.1333 25.008,264.1333" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,233.1713 25.008,233.1713" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,217.6903 25.008,217.6903" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,202.2093 25.008,202.2093" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,171.2473 25.008,171.2473" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,155.7663 25.008,155.7663" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,140.2853 25.008,140.2853" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,109.3233 25.008,109.3233" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,93.8423 25.008,93.8423" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,78.3613 25.008,78.3613" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,47.3993 25.008,47.3993" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <text dominant-baseline="hanging" text-anchor="middle" transform="translate(134.9565,381.947)" font-family="Segoe UI" font-size="12" font-weight="400" fill="black">10</text>
+    <text dominant-baseline="hanging" text-anchor="middle" transform="translate(246.5988,381.947)" font-family="Segoe UI" font-size="12" font-weight="400" fill="black">20</text>
+    <text dominant-baseline="hanging" text-anchor="middle" transform="translate(358.241,381.947)" font-family="Segoe UI" font-size="12" font-weight="400" fill="black">30</text>
+    <text dominant-baseline="hanging" text-anchor="middle" transform="translate(469.8833,381.947)" font-family="Segoe UI" font-size="12" font-weight="400" fill="black">40</text>
+    <text dominant-baseline="hanging" text-anchor="middle" transform="translate(581.5255,381.947)" font-family="Segoe UI" font-size="12" font-weight="400" fill="black">50</text>
+    <polyline points="134.9565,370.947 134.9565,377.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="246.5988,370.947 246.5988,377.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="358.241,370.947 358.241,377.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="469.8833,370.947 469.8833,377.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="581.5255,370.947 581.5255,377.947" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <text dominant-baseline="middle" text-anchor="end" transform="translate(18.008,310.5763)" font-family="Segoe UI" font-size="12" font-weight="400" fill="black">4</text>
+    <text dominant-baseline="middle" text-anchor="end" transform="translate(18.008,248.6523)" font-family="Segoe UI" font-size="12" font-weight="400" fill="black">6</text>
+    <text dominant-baseline="middle" text-anchor="end" transform="translate(18.008,186.7283)" font-family="Segoe UI" font-size="12" font-weight="400" fill="black">8</text>
+    <text dominant-baseline="middle" text-anchor="end" transform="translate(18.008,124.8043)" font-family="Segoe UI" font-size="12" font-weight="400" fill="black">10</text>
+    <text dominant-baseline="middle" text-anchor="end" transform="translate(18.008,62.8803)" font-family="Segoe UI" font-size="12" font-weight="400" fill="black">12</text>
+    <polyline points="29.008,310.5763 22.008,310.5763" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,248.6523 22.008,248.6523" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,186.7283 22.008,186.7283" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,124.8043 22.008,124.8043" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+    <polyline points="29.008,62.8803 22.008,62.8803" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+  </g>
+  <defs>
+    <clipPath id="clipPath2">
+      <rect x="29.008" y="34.106" width="557.988" height="336.841" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#clipPath2)">
+    <polyline points="581.5255,367.6446 302.4199,333.226 190.7776,293.5281 79.1354,144.0832 34.4785,37.4084" style="fill:none;stroke:rgb(78,154,6);stroke-width:2;stroke-linejoin:bevel" />
+    <ellipse cx="581.5255" cy="367.6446" rx="4" ry="4" style="fill:rgb(78,154,6);stroke:rgb(255,255,255);stroke-width:1" shape-rendering="geometricPrecision" />
+    <ellipse cx="302.4199" cy="333.226" rx="4" ry="4" style="fill:rgb(78,154,6);stroke:rgb(255,255,255);stroke-width:1" shape-rendering="geometricPrecision" />
+    <ellipse cx="190.7776" cy="293.5281" rx="4" ry="4" style="fill:rgb(78,154,6);stroke:rgb(255,255,255);stroke-width:1" shape-rendering="geometricPrecision" />
+    <ellipse cx="79.1354" cy="144.0832" rx="4" ry="4" style="fill:rgb(78,154,6);stroke:rgb(255,255,255);stroke-width:1" shape-rendering="geometricPrecision" />
+    <ellipse cx="34.4785" cy="37.4084" rx="4" ry="4" style="fill:rgb(78,154,6);stroke:rgb(255,255,255);stroke-width:1" shape-rendering="geometricPrecision" />
+  </g>
+  <defs>
+    <clipPath id="clipPath3">
+      <rect x="0" y="0" width="600" height="400" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#clipPath3)">
+    <text dominant-baseline="hanging" text-anchor="middle" transform="translate(308.002,8)" font-family="Segoe UI" font-size="18" font-weight="700" fill="black">Quality vs Compression Ratio</text>
+    <rect x="29.008" y="34.106" width="557.988" height="336.841" style="fill:none;stroke:black;stroke-width:1" shape-rendering="crispEdges" />
+  </g>
+</svg>
