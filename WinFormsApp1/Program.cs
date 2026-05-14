@@ -18,10 +18,9 @@ namespace WinFormsApp1
 
             //************************************************
             //Enter any path image for convert it 
-            //RgbToCmyk("C:\\Users\\Rama Alwanni\\Desktop\\image.jpg");
-            //RgbToHsv("C:\\Users\\Rama Alwanni\\Desktop\\image.jpg");
+            RgbToCmyk("C:\\Users\\Rama Alwanni\\Desktop\\image.jpg");
+            RgbToHsv("C:\\Users\\Rama Alwanni\\Desktop\\image.jpg");
             //************************************************
-            ConvertToYcbcr("C:\\Users\\dell\\Documents\\4th\\ForStudy\\Lectures\\2S\\MultiMedia\\Practical\\Lec\\IT.jpg");
 
             Application.Run(new PixelLabMainForm());
 
