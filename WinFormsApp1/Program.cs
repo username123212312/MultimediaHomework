@@ -8,7 +8,6 @@ namespace WinFormsApp1
 {
     internal static class Program
     {
-           /////////////////////////////////////////////////////////////////////////
 
         [STAThread]
         static void Main()
@@ -18,8 +17,12 @@ namespace WinFormsApp1
 
             //************************************************
             //Enter any path image for convert it 
-            RgbToCmyk("C:\\Users\\Rama Alwanni\\Desktop\\image.jpg");
-            RgbToHsv("C:\\Users\\Rama Alwanni\\Desktop\\image.jpg");
+            ColorConverter.RgbToCmyk("C:\\Users\\Rama Alwanni\\Desktop\\image.jpg");
+            ColorConverter.RgbToHsv("C:\\Users\\Rama Alwanni\\Desktop\\image.jpg");
+            ColorConverter.ConvertToYcbcr("C:\\Users\\Rama Alwanni\\Desktop\\image.jpg");
+            ColorConverter.ConvertToYUV("C:\\Users\\Rama Alwanni\\Desktop\\image.jpg");
+            ColorConverter.ConvertToLAB("C:\\Users\\Rama Alwanni\\Desktop\\image.jpg");
+
             //************************************************
 
             Application.Run(new PixelLabMainForm());
