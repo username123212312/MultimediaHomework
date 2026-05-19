@@ -30,6 +30,7 @@ namespace WinFormsApp1
         private CancellationTokenSource? applyCts;
 
         private string? currentImagePath;
+        private ColorSpaceVisualizer colorSpaceVisualizer;
         private Image? originalImage;
 
         public PixelLabMainForm()
@@ -38,6 +39,12 @@ namespace WinFormsApp1
             Width = 1000;
             Height = 700;
             AllowDrop = true;
+
+            colorSpaceVisualizer = new ColorSpaceVisualizer();
+            colorSpaceVisualizer.BackColor = Color.FromArgb(25, 25, 25);
+            colorSpaceVisualizer.Location = new Point(650, 100);
+            colorSpaceVisualizer.Size = new Size(320, 320);
+            colorSpaceVisualizer.Name = "colorSpaceVisualizer";
 
             // Top panel: color system selector + dynamic trackbars
             topPanel = new Panel
@@ -162,10 +169,12 @@ namespace WinFormsApp1
             MainMenuStrip = menuStrip;
 
             Controls.Add(pictureBox);
+            Controls.Add(colorSpaceVisualizer);
             Controls.Add(topPanel);
             Controls.Add(statusStrip);
             Controls.Add(menuStrip);
 
+            colorSpaceVisualizer.BringToFront();
             DragEnter += PixelLabMainForm_DragEnter;
             DragDrop += PixelLabMainForm_DragDrop;
             pictureBox.MouseMove += PictureBox_MouseMove;
@@ -174,8 +183,27 @@ namespace WinFormsApp1
         }
 
         // small typed container to hold captured UI state (read on UI thread)
-        private readonly record struct UiState(string System, TrackBar[] Sliders, bool KeepR, bool KeepG, bool KeepB, int WidthPct, int HeightPct);
+        public struct UiState
+        {
+            public string System { get; }
+            public TrackBar[] Sliders { get; }
+            public bool KeepR { get; }
+            public bool KeepG { get; }
+            public bool KeepB { get; }
+            public int WidthPct { get; }
+            public int HeightPct { get; }
 
+            public UiState(string system, TrackBar[] sliders, bool keepR, bool keepG, bool keepB, int widthPct, int heightPct)
+            {
+                System = system;
+                Sliders = sliders;
+                KeepR = keepR;
+                KeepG = keepG;
+                KeepB = keepB;
+                WidthPct = widthPct;
+                HeightPct = heightPct;
+            }
+        }
         // Capture all UI state on UI thread in one place
         private UiState CaptureUiState()
         {
@@ -430,6 +458,11 @@ namespace WinFormsApp1
                 old?.Dispose();
                 statusLabel.Text = $"{Path.GetFileName(currentImagePath ?? string.Empty)} - {finalBmp.Width}x{finalBmp.Height}";
                 dragDropLabel.Visible = pictureBox.Image == null;
+
+                if (finalBmp != null)
+                {
+                    colorSpaceVisualizer.SetImage(finalBmp);
+                }
             }));
         }
 
@@ -566,11 +599,13 @@ namespace WinFormsApp1
                 }
 
                 ScheduleApplyChanges();
+                colorSpaceVisualizer.SetImage((Bitmap)img);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to load image:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+
         }
 
         private void SetPictureImage(Image img)
@@ -590,6 +625,48 @@ namespace WinFormsApp1
                 originalImage?.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        private void InitializeComponent()
+        {
+            this.colorSpaceVisualizer = new WinFormsApp1.ColorSpaceVisualizer();
+            this.SuspendLayout();
+            // 
+            // colorSpaceVisualizer
+            // 
+            this.colorSpaceVisualizer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(25)))), ((int)(((byte)(25)))), ((int)(((byte)(25)))));
+            this.colorSpaceVisualizer.Location = new System.Drawing.Point(599, 73);
+            this.colorSpaceVisualizer.Name = "colorSpaceVisualizer";
+            this.colorSpaceVisualizer.Size = new System.Drawing.Size(320, 320);
+            this.colorSpaceVisualizer.TabIndex = 0;
+            this.colorSpaceVisualizer.Load += new System.EventHandler(this.colorSpaceVisualizer1_Load);
+            this.colorSpaceVisualizer.Resize += new System.EventHandler(this.colorSpaceVisualizer_Resize);
+            // 
+            // PixelLabMainForm
+            // 
+            this.ClientSize = new System.Drawing.Size(672, 330);
+            this.Controls.Add(this.colorSpaceVisualizer);
+            this.Name = "PixelLabMainForm";
+            this.ResumeLayout(false);
+
+        }
+
+        private void colorSpaceVisualizer1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void colorSpaceVisualizer_Resize(object sender, EventArgs e)
+        {
+            int width = colorSpaceVisualizer.Width;
+            int height = colorSpaceVisualizer.Height;
+
+            if (height == 0) height = 1; 
+
+            double aspectRatio = (double)width / height;
+
+
+            colorSpaceVisualizer.Invalidate();
         }
     }
 }
