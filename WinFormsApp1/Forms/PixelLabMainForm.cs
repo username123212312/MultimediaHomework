@@ -179,7 +179,6 @@ namespace WinFormsApp1
             colorReductionGroup.Controls.Add(lblColorReduction);
 
 
-            // ===== الطلب 8: معلومات الصورة =====
             var infoTitle = new Label
             {
                 Text = "معلومات الصورة:",
@@ -272,7 +271,8 @@ namespace WinFormsApp1
             var openItem = new ToolStripMenuItem("Open...", null, OpenItem_Click);
             var resetItem = new ToolStripMenuItem("Reset", null, ResetItem_Click) { Enabled = true };
             var exitItem = new ToolStripMenuItem("Exit", null, (s, e) => Close());
-            fileMenu.DropDownItems.AddRange(new ToolStripItem[] { openItem, resetItem, new ToolStripSeparator(), exitItem });
+            var saveItem = new ToolStripMenuItem("Save As...", null, SaveItem_Click) { Enabled = false };  
+            fileMenu.DropDownItems.AddRange(new ToolStripItem[] { openItem, resetItem, saveItem , new ToolStripSeparator(), exitItem });
             menuStrip.Items.Add(fileMenu);
             MainMenuStrip = menuStrip;
 
@@ -598,6 +598,51 @@ namespace WinFormsApp1
             }
         }
 
+        private void SaveItem_Click(object? sender, EventArgs e)
+        {
+            if (pictureBox.Image == null)
+            {
+                MessageBox.Show("لا توجد صورة للحفظ!", "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            using var sfd = new SaveFileDialog();
+            sfd.Title = "حفظ الصورة المعدلة";
+            sfd.Filter = "PNG Image (*.png)|*.png|JPEG Image (*.jpg)|*.jpg|BMP Image (*.bmp)|*.bmp";
+            sfd.FilterIndex = 1;
+            sfd.FileName = Path.GetFileNameWithoutExtension(currentImagePath ?? "image") + "_edited";
+
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    Bitmap bmp = new Bitmap(pictureBox.Image.Width, pictureBox.Image.Height);
+                    using (Graphics g = Graphics.FromImage(bmp))
+                    {
+                        g.DrawImage(pictureBox.Image, 0, 0, bmp.Width, bmp.Height);
+                    }
+
+                    ImageFormat format = sfd.FilterIndex switch
+                    {
+                        1 => ImageFormat.Png,
+                        2 => ImageFormat.Jpeg,
+                        3 => ImageFormat.Bmp,
+                        _ => ImageFormat.Png
+                    };
+
+                    bmp.Save(sfd.FileName, format);
+                    bmp.Dispose();
+
+                    MessageBox.Show($"تم حفظ الصورة بنجاح!", "تم الحفظ", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    statusLabel.Text = $"Saved: {Path.GetFileName(sfd.FileName)}";
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"فشل حفظ الصورة: {ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
         private void PixelLabMainForm_DragEnter(object? sender, DragEventArgs e)
         {
             if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop))
@@ -707,6 +752,9 @@ namespace WinFormsApp1
                         foreach (ToolStripItem item in menu.DropDownItems)
                         {
                             if (item.Text == "Reset")
+                                item.Enabled = true;
+
+                            if (item.Text == "Save As...")
                                 item.Enabled = true;
                         }
                     }
