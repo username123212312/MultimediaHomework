@@ -33,10 +33,10 @@
 //        }
 
 //        // Form Constructor
-//        public Form1()
-//        {
-//            InitializeComponent();
-//        }
+//        //public Form1()
+//        //{
+//        //    InitializeComponent();
+//        //}
 
 //        // =================================================================
 //        // 2. Mouse and UI Control Events
@@ -65,7 +65,7 @@
 //                        using (Graphics g = Graphics.FromImage(bmp))
 //                        {
 //                            // Convert control relative coordinates to screen coordinates for precision
-//                            Point screenPos = colorSpaceVisualizer1.PointToScreen(mousePos);
+//                            Point screenPos = ColorSpaceVisualizer.PointToScreen(mousePos);
 //                            g.CopyFromScreen(screenPos.X, screenPos.Y, 0, 0, new Size(1, 1));
 //                        }
 

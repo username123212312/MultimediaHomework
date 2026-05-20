@@ -408,5 +408,25 @@ namespace WinFormsApp1
             byte nb = (byte)Math.Min(255, Math.Max(0, (int)Math.Round(bLab + 128.0)));
             return (nr, ng, nb);
         });
+
+        public static Bitmap ReduceColors(Bitmap src, int colorCount)
+        {
+            if (src == null) throw new ArgumentNullException(nameof(src));
+            if (colorCount < 1) colorCount = 1;
+            if (colorCount > 256) colorCount = 256;
+
+            int colorsPerChannel = (int)Math.Pow(colorCount, 1.0 / 3.0);
+            if (colorsPerChannel < 1) colorsPerChannel = 1;
+
+            int step = 256 / colorsPerChannel;
+
+            return ProcessBitmap(src, (b, g, r) =>
+            {
+                byte nr = (byte)((r / step) * step);
+                byte ng = (byte)((g / step) * step);
+                byte nb = (byte)((b / step) * step);
+                return (nr, ng, nb);
+            });
+        }
     }
 }

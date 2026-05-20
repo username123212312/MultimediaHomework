@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -33,6 +35,11 @@ namespace WinFormsApp1
         private ColorSpaceVisualizer colorSpaceVisualizer;
         private Image? originalImage;
 
+        private NumericUpDown numColorCount;
+        private Label imageInfoLabel;
+        private bool _isReducingColors = false;
+        private string? _originalFilePath; 
+
         public PixelLabMainForm()
         {
             Text = "PixelLab - Image Viewer";
@@ -42,7 +49,8 @@ namespace WinFormsApp1
 
             colorSpaceVisualizer = new ColorSpaceVisualizer();
             colorSpaceVisualizer.BackColor = Color.FromArgb(25, 25, 25);
-            colorSpaceVisualizer.Location = new Point(650, 100);
+            colorSpaceVisualizer.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            colorSpaceVisualizer.Location = new Point(this.Width - 340, 100);
             colorSpaceVisualizer.Size = new Size(320, 320);
             colorSpaceVisualizer.Name = "colorSpaceVisualizer";
 
@@ -50,7 +58,7 @@ namespace WinFormsApp1
             topPanel = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 80,
+                Height = 95,
                 Padding = new Padding(6),
                 BackColor = Color.FromArgb(32, 32, 36)
             };
@@ -89,12 +97,107 @@ namespace WinFormsApp1
             var rightPanel = new FlowLayoutPanel
             {
                 Dock = DockStyle.Right,
-                Width = 200,
+                Width = 500,
                 Padding = new Padding(6),
                 BackColor = Color.Transparent,
                 FlowDirection = FlowDirection.TopDown,
                 WrapContents = false,
-                AutoSize = false
+                AutoSize = false,
+                AutoScroll = true,
+
+            };
+
+            var colorReductionGroup = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 70,
+                Margin = new Padding(0, 5, 0, 5),
+                BackColor = Color.FromArgb(45, 45, 48)
+            };
+
+            var lblColorReduction = new Label
+            {
+                Text = "(تقليل الألوان (لحظي",
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                Dock = DockStyle.Top,
+                Padding = new Padding(6, 6, 6, 0),
+                Height = 28
+            };
+
+            var colorControlPanel = new Panel { Dock = DockStyle.Fill };
+
+            var lblColorCount = new Label
+            {
+                Text = "عدد الألوان:",
+                ForeColor = Color.White,
+                Location = new Point(6, 12),
+                Size = new Size(70, 23)
+            };
+
+            numColorCount = new NumericUpDown
+            {
+                Minimum = 2,
+                Maximum = 256,
+                Value = 256,
+                Width = 80,
+                Location = new Point(85, 10),
+                BackColor = Color.FromArgb(60, 60, 65),
+                ForeColor = Color.White
+            };
+
+            numColorCount.ValueChanged += (s, e) =>
+            {
+                if (originalImage != null && !_isReducingColors && pictureBox.Image != null)
+                {
+                    _isReducingColors = true;
+                    try
+                    {
+                        int colorCount = (int)numColorCount.Value;
+                        var reduced = ColorConverter.ReduceColors((Bitmap)originalImage, colorCount);
+                        var old = pictureBox.Image;
+                        pictureBox.Image = reduced;
+                        old?.Dispose();
+                        colorSpaceVisualizer.SetImage(reduced);
+                        UpdateCurrentImageInfo(reduced);
+                        statusLabel.Text = $" تقليل الألوان إلى {colorCount} لون";
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error: {ex.Message}");
+                    }
+                    finally
+                    {
+                        _isReducingColors = false;
+                    }
+                }
+            };
+
+            colorControlPanel.Controls.Add(lblColorCount);
+            colorControlPanel.Controls.Add(numColorCount);
+            colorReductionGroup.Controls.Add(colorControlPanel);
+            colorReductionGroup.Controls.Add(lblColorReduction);
+
+
+            // ===== الطلب 8: معلومات الصورة =====
+            var infoTitle = new Label
+            {
+                Text = "معلومات الصورة:",
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                AutoSize = true,
+                Margin = new Padding(6, 12, 6, 0)
+            };
+
+            imageInfoLabel = new Label
+            {
+                Text = "لا توجد صورة",
+                ForeColor = Color.LightGray,
+                AutoSize = false,
+                Width = 180,
+                Height = 120,
+                Font = new Font("Segoe UI", 8),
+                Margin = new Padding(6, 3, 6, 8)
             };
 
             var chkPanel = new FlowLayoutPanel
@@ -130,6 +233,11 @@ namespace WinFormsApp1
             rightPanel.Controls.Add(lblH);
             rightPanel.Controls.Add(numHeightPct);
 
+            rightPanel.Controls.Add(colorReductionGroup);
+            rightPanel.Controls.Add(infoTitle);
+            rightPanel.Controls.Add(imageInfoLabel);
+
+
             // Add controls in order: trackPanel (fill), leftPanel (left dock), rightPanel (right dock).
             topPanel.Controls.Add(trackPanel);
             topPanel.Controls.Add(leftPanel);
@@ -162,7 +270,7 @@ namespace WinFormsApp1
             menuStrip = new MenuStrip();
             var fileMenu = new ToolStripMenuItem("File");
             var openItem = new ToolStripMenuItem("Open...", null, OpenItem_Click);
-            var resetItem = new ToolStripMenuItem("Reset", null, ResetItem_Click) { Enabled = false };
+            var resetItem = new ToolStripMenuItem("Reset", null, ResetItem_Click) { Enabled = true };
             var exitItem = new ToolStripMenuItem("Exit", null, (s, e) => Close());
             fileMenu.DropDownItems.AddRange(new ToolStripItem[] { openItem, resetItem, new ToolStripSeparator(), exitItem });
             menuStrip.Items.Add(fileMenu);
@@ -318,6 +426,8 @@ namespace WinFormsApp1
 
         private async Task ApplyChangesAsync(CancellationToken token)
         {
+            if (_isReducingColors) return;
+
             if (originalImage == null) return;
 
             Bitmap srcBmp;
@@ -462,6 +572,7 @@ namespace WinFormsApp1
                 if (finalBmp != null)
                 {
                     colorSpaceVisualizer.SetImage(finalBmp);
+                    UpdateCurrentImageInfo(finalBmp);
                 }
             }));
         }
@@ -482,6 +593,7 @@ namespace WinFormsApp1
             {
                 applyCts?.Cancel();
                 SetPictureImage((Image)originalImage.Clone());
+                UpdateCurrentImageInfo((Image)originalImage.Clone());
                 statusLabel.Text = $"Restored: {Path.GetFileName(currentImagePath ?? string.Empty)}";
             }
         }
@@ -582,8 +694,10 @@ namespace WinFormsApp1
                 originalImage?.Dispose();
                 originalImage = (Image)img.Clone();
                 currentImagePath = path;
+                _originalFilePath = path;
 
                 SetPictureImage(img);
+                UpdateCurrentImageInfo(img);
                 statusLabel.Text = $"{Path.GetFileName(path)} - {img.Width}x{img.Height}";
 
                 foreach (ToolStripMenuItem menu in menuStrip.Items)
@@ -667,6 +781,34 @@ namespace WinFormsApp1
 
 
             colorSpaceVisualizer.Invalidate();
+        }
+
+        private void UpdateCurrentImageInfo(Image img)
+        {
+            if (img == null)
+            {
+                imageInfoLabel.Text = "لا توجد صورة";
+                return;
+            }
+
+            var sb = new System.Text.StringBuilder();
+
+            if (!string.IsNullOrEmpty(_originalFilePath))
+            {
+                var fileInfo = new FileInfo(_originalFilePath);
+                sb.AppendLine($"{Path.GetFileName(_originalFilePath)}");
+                sb.AppendLine($"{img.Width} x {img.Height}");
+                sb.AppendLine($"{fileInfo.Length / 1024} KB");
+            }
+            else
+            {
+                sb.AppendLine($"{img.Width} x {img.Height}");
+            }
+
+            sb.AppendLine($"{img.PixelFormat}");
+            sb.AppendLine($"بكسل: {img.Width * img.Height:N0}");
+
+            imageInfoLabel.Text = sb.ToString();
         }
     }
 }
