@@ -14,7 +14,7 @@ namespace WinFormsApp1
         private float zoomScale = 1.0f;
         private Point lastMousePosition;
         private Bitmap currentBitmap;
-
+        // c202508
         // Constructor: Initializes the control, enables double buffering, and hooks up mouse events.
         public ColorSpaceVisualizer()
         {
