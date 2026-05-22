@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-
 namespace WinFormsApp1
 {
     public class PixelLabMainForm : Form
@@ -19,7 +18,6 @@ namespace WinFormsApp1
         private readonly ToolStripStatusLabel statusLabel;
         private readonly MenuStrip menuStrip;
 
-        // New UI controls for color-system selection and component controls
         private readonly Panel topPanel;
         private readonly ComboBox comboColorSystem;
         private readonly FlowLayoutPanel trackPanel;
@@ -38,7 +36,23 @@ namespace WinFormsApp1
         private NumericUpDown numColorCount;
         private Label imageInfoLabel;
         private bool _isReducingColors = false;
-        private string? _originalFilePath; 
+        private string? _originalFilePath;
+
+        private Button btnSwitchSystem;
+        private Label lblRGBResult;
+        private Label lblHSVResult;
+
+
+        
+        public struct HSVColor
+        {
+            public double H; public double S; public double V;
+        }
+
+        public struct CMYKColor
+        {
+            public double C; public double M; public double Y; public double K;
+        }
 
         public PixelLabMainForm()
         {
@@ -54,7 +68,8 @@ namespace WinFormsApp1
             colorSpaceVisualizer.Size = new Size(320, 320);
             colorSpaceVisualizer.Name = "colorSpaceVisualizer";
 
-            // Top panel: color system selector + dynamic trackbars
+            colorSpaceVisualizer.MouseClick += colorSpaceVisualizer_MouseClick;
+
             topPanel = new Panel
             {
                 Dock = DockStyle.Top,
@@ -63,7 +78,6 @@ namespace WinFormsApp1
                 BackColor = Color.FromArgb(32, 32, 36)
             };
 
-            // Left container ensures combo has reserved space and prevents overlap.
             var leftPanel = new Panel
             {
                 Dock = DockStyle.Left,
@@ -80,7 +94,7 @@ namespace WinFormsApp1
                 Margin = new Padding(0)
             };
             comboColorSystem.Items.AddRange(new object[] { "RGB", "HSV", "CMYK", "YCbCr", "YUV", "LAB" });
-            comboColorSystem.SelectedIndexChanged += ComboColorSystem_SelectedIndexChanged;
+            comboColorSystem.SelectedIndexChanged += comboColorSystem_SelectedIndexChanged;
             leftPanel.Controls.Add(comboColorSystem);
 
             trackPanel = new FlowLayoutPanel
@@ -93,7 +107,6 @@ namespace WinFormsApp1
                 Height = 44
             };
 
-            // Right options panel: channel toggles + reshape controls
             var rightPanel = new FlowLayoutPanel
             {
                 Dock = DockStyle.Right,
@@ -102,9 +115,7 @@ namespace WinFormsApp1
                 BackColor = Color.Transparent,
                 FlowDirection = FlowDirection.TopDown,
                 WrapContents = false,
-                AutoSize = false,
                 AutoScroll = true,
-
             };
 
             var colorReductionGroup = new Panel
@@ -178,7 +189,6 @@ namespace WinFormsApp1
             colorReductionGroup.Controls.Add(colorControlPanel);
             colorReductionGroup.Controls.Add(lblColorReduction);
 
-
             var infoTitle = new Label
             {
                 Text = "معلومات الصورة:",
@@ -231,13 +241,10 @@ namespace WinFormsApp1
             rightPanel.Controls.Add(numWidthPct);
             rightPanel.Controls.Add(lblH);
             rightPanel.Controls.Add(numHeightPct);
-
             rightPanel.Controls.Add(colorReductionGroup);
             rightPanel.Controls.Add(infoTitle);
             rightPanel.Controls.Add(imageInfoLabel);
 
-
-            // Add controls in order: trackPanel (fill), leftPanel (left dock), rightPanel (right dock).
             topPanel.Controls.Add(trackPanel);
             topPanel.Controls.Add(leftPanel);
             topPanel.Controls.Add(rightPanel);
@@ -259,7 +266,6 @@ namespace WinFormsApp1
                 BackColor = Color.Transparent,
                 AutoSize = false
             };
-
             pictureBox.Controls.Add(dragDropLabel);
 
             statusStrip = new StatusStrip();
@@ -271,8 +277,8 @@ namespace WinFormsApp1
             var openItem = new ToolStripMenuItem("Open...", null, OpenItem_Click);
             var resetItem = new ToolStripMenuItem("Reset", null, ResetItem_Click) { Enabled = true };
             var exitItem = new ToolStripMenuItem("Exit", null, (s, e) => Close());
-            var saveItem = new ToolStripMenuItem("Save As...", null, SaveItem_Click) { Enabled = false };  
-            fileMenu.DropDownItems.AddRange(new ToolStripItem[] { openItem, resetItem, saveItem , new ToolStripSeparator(), exitItem });
+            var saveItem = new ToolStripMenuItem("Save As...", null, SaveItem_Click) { Enabled = false };
+            fileMenu.DropDownItems.AddRange(new ToolStripItem[] { openItem, resetItem, saveItem, new ToolStripSeparator(), exitItem });
             menuStrip.Items.Add(fileMenu);
             MainMenuStrip = menuStrip;
 
@@ -288,9 +294,337 @@ namespace WinFormsApp1
             pictureBox.MouseMove += PictureBox_MouseMove;
 
             comboColorSystem.SelectedIndex = 0;
+
+            InitializeCustomPlacementComponents();
+            lblRGBResult.Visible = false;   
+            lblHSVResult.Visible = false;    
         }
 
-        // small typed container to hold captured UI state (read on UI thread)
+   
+        private void InitializeCustomPlacementComponents()
+        {
+            lblRGBResult = new Label();
+            lblRGBResult.Text = "RGB → (0, 0, 0)";
+            lblRGBResult.ForeColor = Color.LightGreen;
+            lblRGBResult.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblRGBResult.Size = new Size(320, 25);
+            lblRGBResult.Location = new Point(this.Width - 340, 440);
+            lblRGBResult.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+
+            lblHSVResult = new Label();
+            lblHSVResult.Text = "HSV → (0°, 0%, 0%)";
+            lblHSVResult.ForeColor = Color.LightCyan;
+            lblHSVResult.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblHSVResult.Size = new Size(320, 25);
+            lblHSVResult.Location = new Point(this.Width - 340, 470);
+            lblHSVResult.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+
+            btnSwitchSystem = new Button();
+            btnSwitchSystem.Text = "Color Space 3D Visualizer";
+            btnSwitchSystem.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnSwitchSystem.Size = new Size(220, 45);
+            btnSwitchSystem.BackColor = Color.FromArgb(50, 50, 55);
+            btnSwitchSystem.ForeColor = Color.White;
+            btnSwitchSystem.FlatStyle = FlatStyle.Flat;
+            btnSwitchSystem.Cursor = Cursors.Hand;
+
+            btnSwitchSystem.Location = new Point(
+                this.ClientSize.Width - btnSwitchSystem.Width - 20,
+                this.ClientSize.Height - btnSwitchSystem.Height - 40
+            );
+            btnSwitchSystem.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+
+            btnSwitchSystem.Click += btnOpenVisualizerForm_Click;
+
+            this.Controls.Add(lblRGBResult);
+            this.Controls.Add(lblHSVResult);
+            this.Controls.Add(btnSwitchSystem);
+
+            lblRGBResult.BringToFront();
+            lblHSVResult.BringToFront();
+            btnSwitchSystem.BringToFront();
+        }
+        //private void btnOpenVisualizerForm_Click(object? sender, EventArgs e)
+        //{
+        //    if (originalImage == null)
+        //    {
+        //        MessageBox.Show("Please load an image first!", "No Image", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        //        return;
+        //    }
+
+        //    Form visualizerForm = new Form
+        //    {
+        //        Text = "3D Color Space Explorer",
+        //        Width = 500,
+        //        Height = 680,
+        //        StartPosition = FormStartPosition.CenterScreen,
+        //        FormBorderStyle = FormBorderStyle.FixedSingle,
+        //        MaximizeBox = false,
+        //        BackColor = Color.FromArgb(25, 25, 25)
+        //    };
+
+        //    string currentSystem = comboColorSystem.SelectedItem?.ToString() ?? "RGB";
+
+        //    colorSpaceVisualizer.Dock = DockStyle.Top;
+        //    colorSpaceVisualizer.Height = 400;
+        //    visualizerForm.Controls.Add(colorSpaceVisualizer);
+
+        //    colorSpaceVisualizer.SetColorSystem(currentSystem);
+
+        //    Panel infoPanel = new Panel
+        //    {
+        //        Dock = DockStyle.Bottom,
+        //        Height = 240,
+        //        Padding = new Padding(20, 10, 20, 10),
+        //        BackColor = Color.FromArgb(32, 32, 36)
+        //    };
+
+        //    Label lblTitle = new Label
+        //    {
+        //        Text = $"Current Coordinates ({currentSystem} Model)",
+        //        ForeColor = Color.White,
+        //        Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+        //        Dock = DockStyle.Top,
+        //        Height = 30
+        //    };
+        //    infoPanel.Controls.Add(lblTitle);
+
+        //    Label lblAllSystems = new Label
+        //    {
+        //        Text = "Click on the visualizer to pick a color...",
+        //        ForeColor = Color.LightGray,
+        //        Font = new Font("Consolas", 10.5F, FontStyle.Regular),
+        //        Dock = DockStyle.Fill,
+        //        Location = new Point(20, 40)
+        //    };
+        //    infoPanel.Controls.Add(lblAllSystems);
+        //    visualizerForm.Controls.Add(infoPanel);
+
+        //    EventHandler<Color> colorPickedHandler = (s_sender, pickedColor) =>
+        //    {
+        //        int r = pickedColor.R; int g = pickedColor.G; int b = pickedColor.B;
+
+        //        double rN = r / 255.0, gN = g / 255.0, bN = b / 255.0;
+        //        double max = Math.Max(rN, Math.Max(gN, bN)), min = Math.Min(rN, Math.Min(gN, bN)), delta = max - min;
+        //        double v = Math.Round(max * 100);
+
+        //        double se = max == 0 ? 0 : Math.Round((delta / max) * 100);
+        //        double h = 0;
+        //        if (delta != 0)
+        //        {
+        //            if (max == rN) h = 60 * (((gN - bN) / delta) % 6);
+        //            else if (max == gN) h = 60 * (((bN - rN) / delta) + 2);
+        //            else if (max == bN) h = 60 * (((rN - gN) / delta) + 4);
+        //            if (h < 0) h += 360;
+        //        }
+        //        h = Math.Round(h);
+
+        //        double k = 1 - max;
+        //        double c = k == 1 ? 0 : (1 - rN - k) / (1 - k);
+        //        double m = k == 1 ? 0 : (1 - gN - k) / (1 - k);
+        //        double y = k == 1 ? 0 : (1 - bN - k) / (1 - k);
+
+        //        double Y_u = 0.299 * r + 0.587 * g + 0.114 * b;
+        //        double U_u = -0.14713 * r - 0.28886 * g + 0.436 * b;
+        //        double V_u = 0.615 * r - 0.51499 * g - 0.10001 * b;
+
+        //        double Y_c = 16 + (65.481 * rN + 128.553 * gN + 24.966 * bN);
+        //        double Cb = 128 + (-37.797 * rN - 74.203 * gN + 112.0 * bN);
+        //        double Cr = 128 + (112.0 * rN - 93.786 * gN - 18.214 * bN);
+
+        //        double L = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 2.55;
+        //        double a_lab = r - g;
+        //        double b_lab = g - b;
+
+        //        Action updateUI = () => {
+        //            lblAllSystems.Text =
+        //                  $"RGB   → ({r}, {g}, {b})\n" +
+        //                  $"HSV   → ({h}°, {se}%, {v}%)\n" +
+        //                  $"CMYK  → ({Math.Round(c * 100)}%, {Math.Round(m * 100)}%, {Math.Round(y * 100)}%, {Math.Round(k * 100)}%)\n" +
+        //                  $"YUV   → ({Math.Round(Y_u, 1)}, {Math.Round(U_u, 1)}, {Math.Round(V_u, 1)})\n" +
+        //                  $"LAB   → ({Math.Round(L, 1)}, {Math.Round(a_lab, 1)}, {Math.Round(b_lab, 1)})\n" +
+        //                  $"YCbCr → ({Math.Round(Y_c)}, {Math.Round(Cb)}, {Math.Round(Cr)})"; 
+
+        //            lblAllSystems.Refresh();
+        //        };
+
+        //        if (lblAllSystems.InvokeRequired)
+        //        {
+        //            lblAllSystems.BeginInvoke(new Action(updateUI));
+        //        }
+        //        else
+        //        {
+        //            updateUI();
+        //        }
+
+        //        UpdateAndSyncColorOutputs(r, g, b);
+        //    };
+
+        //    colorSpaceVisualizer.ColorPicked += colorPickedHandler;
+
+        //    visualizerForm.FormClosing += (senderForm, ev) =>
+        //    {
+        //        colorSpaceVisualizer.ColorPicked -= colorPickedHandler;
+
+        //        colorSpaceVisualizer.Dock = DockStyle.None;
+        //        colorSpaceVisualizer.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        //        colorSpaceVisualizer.Location = new Point(this.Width - 340, 100);
+        //        colorSpaceVisualizer.Size = new Size(320, 320);
+
+        //        this.Controls.Add(colorSpaceVisualizer);
+        //        colorSpaceVisualizer.BringToFront();
+        //    };
+
+        //    visualizerForm.ShowDialog();
+        //}
+        private void btnOpenVisualizerForm_Click(object? sender, EventArgs e)
+        {
+            if (originalImage == null)
+            {
+                MessageBox.Show("Please load an image first!", "No Image", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            Form visualizerForm = new Form
+            {
+                Text = "3D Color Space Explorer",
+                Width = 500,
+                Height = 750,
+                StartPosition = FormStartPosition.CenterScreen,
+                FormBorderStyle = FormBorderStyle.FixedSingle,
+                MaximizeBox = false,
+                BackColor = Color.FromArgb(25, 25, 25)
+            };
+
+            string currentSystem = comboColorSystem.SelectedItem?.ToString() ?? "RGB";
+
+            colorSpaceVisualizer.Dock = DockStyle.Top;
+            colorSpaceVisualizer.Height = 400;
+            visualizerForm.Controls.Add(colorSpaceVisualizer);
+            colorSpaceVisualizer.SetColorSystem(currentSystem);
+
+            Panel infoPanel = new Panel { Dock = DockStyle.Bottom, Height = 300, Padding = new Padding(20), BackColor = Color.FromArgb(32, 32, 36) };
+
+            // تعريف مصفوفة Labels لعرض الـ 6 أنظمة بوضوح
+            Label[] colorLabels = new Label[6];
+            string[] titles = { "RGB", "HSV", "CMYK", "YUV", "LAB", "YCbCr" };
+
+            for (int i = 0; i < 6; i++)
+            {
+                colorLabels[i] = new Label { Text = $"{titles[i]} → ...", ForeColor = Color.Cyan, Font = new Font("Consolas", 11F, FontStyle.Bold), Dock = DockStyle.Top, Height = 35 };
+                infoPanel.Controls.Add(colorLabels[i]);
+            }
+            visualizerForm.Controls.Add(infoPanel);
+
+            EventHandler<Color> colorPickedHandler = (s_sender, pickedColor) =>
+            {
+                int r = pickedColor.R, g = pickedColor.G, b = pickedColor.B;
+                double rN = r / 255.0, gN = g / 255.0, bN = b / 255.0;
+                double max = Math.Max(rN, Math.Max(gN, bN)), min = Math.Min(rN, Math.Min(gN, bN)), delta = max - min;
+                double v = Math.Round(max * 100), se = max == 0 ? 0 : Math.Round((delta / max) * 100);
+
+                double h = 0;
+                if (delta != 0)
+                {
+                    if (max == rN) h = 60 * (((gN - bN) / delta) % 6);
+                    else if (max == gN) h = 60 * (((bN - rN) / delta) + 2);
+                    else if (max == bN) h = 60 * (((rN - gN) / delta) + 4);
+                    if (h < 0) h += 360;
+                }
+                h = Math.Round(h);
+
+                double k = 1 - max;
+                double c = k == 1 ? 0 : (1 - rN - k) / (1 - k);
+                double m = k == 1 ? 0 : (1 - gN - k) / (1 - k);
+                double y = k == 1 ? 0 : (1 - bN - k) / (1 - k);
+
+                double Y_u = 0.299 * r + 0.587 * g + 0.114 * b;
+                double U_u = -0.14713 * r - 0.28886 * g + 0.436 * b;
+                double V_u = 0.615 * r - 0.51499 * g - 0.10001 * b;
+
+                double Y_c = 16 + (65.481 * rN + 128.553 * gN + 24.966 * bN);
+                double Cb = 128 + (-37.797 * rN - 74.203 * gN + 112.0 * bN);
+                double Cr = 128 + (112.0 * rN - 93.786 * gN - 18.214 * bN);
+
+                double L = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 2.55;
+                double a_lab = r - g, b_lab = g - b;
+
+                Action updateUI = () => {
+                    colorLabels[0].Text = $"RGB   → ({r}, {g}, {b})";
+                    colorLabels[1].Text = $"HSV   → ({h}°, {se}%, {v}%)";
+                    colorLabels[2].Text = $"CMYK  → ({Math.Round(c * 100)}%, {Math.Round(m * 100)}%, {Math.Round(y * 100)}%, {Math.Round(k * 100)}%)";
+                    colorLabels[3].Text = $"YUV   → ({Math.Round(Y_u, 1)}, {Math.Round(U_u, 1)}, {Math.Round(V_u, 1)})";
+                    colorLabels[4].Text = $"LAB   → ({Math.Round(L, 1)}, {Math.Round(a_lab, 1)}, {Math.Round(b_lab, 1)})";
+                    colorLabels[5].Text = $"YCbCr → ({Math.Round(Y_c)}, {Math.Round(Cb)}, {Math.Round(Cr)})";
+                    foreach (var lbl in colorLabels) lbl.Refresh();
+                };
+
+                if (infoPanel.InvokeRequired) infoPanel.BeginInvoke(updateUI);
+                else updateUI();
+            };
+
+            colorSpaceVisualizer.ColorPicked += colorPickedHandler;
+            visualizerForm.FormClosing += (s, ev) => { colorSpaceVisualizer.ColorPicked -= colorPickedHandler; };
+            visualizerForm.ShowDialog();
+        }
+
+        private void colorSpaceVisualizer_MouseClick(object? sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                try
+                {
+                    if (sender is Control visualizerControl)
+                    {
+                        using (Bitmap bmp = new Bitmap(1, 1))
+                        {
+                            using (Graphics g = Graphics.FromImage(bmp))
+                            {
+                                Point screenPos = visualizerControl.PointToScreen(e.Location);
+                                g.CopyFromScreen(screenPos.X, screenPos.Y, 0, 0, new Size(1, 1));
+                            }
+                            Color pickedColor = bmp.GetPixel(0, 0);
+                            UpdateAndSyncColorOutputs(pickedColor.R, pickedColor.G, pickedColor.B);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Color Pick Error]: {ex.Message}");
+                }
+            }
+        }
+
+        private void UpdateAndSyncColorOutputs(int r, int g, int b)
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => UpdateAndSyncColorOutputs(r, g, b)));
+                return;
+            }
+
+            double rNorm = r / 255.0; double gNorm = g / 255.0; double bNorm = b / 255.0;
+            double max = Math.Max(rNorm, Math.Max(gNorm, bNorm));
+            double min = Math.Min(rNorm, Math.Min(gNorm, bNorm));
+            double delta = max - min;
+
+            double v = Math.Round(max * 100);
+            double s = max == 0 ? 0 : Math.Round((delta / max) * 100);
+            double h = 0;
+
+            if (delta != 0)
+            {
+                if (max == rNorm) h = 60 * (((gNorm - bNorm) / delta) % 6);
+                else if (max == gNorm) h = 60 * (((bNorm - rNorm) / delta) + 2);
+                else if (max == bNorm) h = 60 * (((rNorm - gNorm) / delta) + 4);
+                if (h < 0) h += 360;
+            }
+            h = Math.Round(h);
+
+           
+        }
+
+
         public struct UiState
         {
             public string System { get; }
@@ -312,7 +646,7 @@ namespace WinFormsApp1
                 HeightPct = heightPct;
             }
         }
-        // Capture all UI state on UI thread in one place
+
         private UiState CaptureUiState()
         {
             if (InvokeRequired)
@@ -336,7 +670,6 @@ namespace WinFormsApp1
             return new UiState(system, sliders, keepR, keepG, keepB, widthPct, heightPct);
         }
 
-        // helper to create a labelled TrackBar panel and add to trackPanel
         private TrackBar AddLabeledTrack(string labelText, int min, int max, int value)
         {
             var container = new Panel { Width = 200, Height = 44, Margin = new Padding(6) };
@@ -357,18 +690,30 @@ namespace WinFormsApp1
             return tb;
         }
 
-        private void ComboColorSystem_SelectedIndexChanged(object? sender, EventArgs e)
+        private void comboColorSystem_SelectedIndexChanged(object? sender, EventArgs e)
         {
-            var system = comboColorSystem.SelectedItem?.ToString() ?? "RGB";
-            BuildTrackBarsForSystem(system);
-            if (originalImage != null)
-                ScheduleApplyChanges();
+            if (comboColorSystem.SelectedItem == null) return;
+
+            string currentSystem = comboColorSystem.SelectedItem.ToString() ?? "RGB";
+
+            if (currentSystem.Length >= 3)
+            {
+                chkR.Text = currentSystem[0].ToString();
+                chkG.Text = currentSystem[1].ToString();
+                chkB.Text = currentSystem[2].ToString();
+            }
+
+            if (colorSpaceVisualizer != null)
+            {
+                colorSpaceVisualizer.SetColorSystem(currentSystem);
+            }
+
+            ScheduleApplyChanges();
         }
 
         private void BuildTrackBarsForSystem(string system)
         {
             trackPanel.Controls.Clear();
-
             switch (system)
             {
                 case "RGB":
@@ -402,8 +747,6 @@ namespace WinFormsApp1
                     AddLabeledTrack("a (shift)", -128, 128, 0);
                     AddLabeledTrack("b (shift)", -128, 128, 0);
                     break;
-                default:
-                    break;
             }
         }
 
@@ -418,7 +761,6 @@ namespace WinFormsApp1
             {
                 try { await Task.Delay(120, token).ConfigureAwait(false); }
                 catch (TaskCanceledException) { return; }
-
                 if (token.IsCancellationRequested) return;
                 await ApplyChangesAsync(token).ConfigureAwait(false);
             }, token);
@@ -426,19 +768,11 @@ namespace WinFormsApp1
 
         private async Task ApplyChangesAsync(CancellationToken token)
         {
-            if (_isReducingColors) return;
-
-            if (originalImage == null) return;
+            if (_isReducingColors || originalImage == null) return;
 
             Bitmap srcBmp;
-            lock (this)
-            {
-                srcBmp = new Bitmap(originalImage);
-            }
-
-            // Capture UI state once
+            lock (this) { srcBmp = new Bitmap(originalImage); }
             var state = CaptureUiState();
-
             if (token.IsCancellationRequested) { srcBmp.Dispose(); return; }
 
             Bitmap resultBmp = srcBmp;
@@ -447,144 +781,60 @@ namespace WinFormsApp1
                 switch (state.System)
                 {
                     case "RGB":
-                        {
-                            double rScale = state.Sliders.ElementAtOrDefault(0)?.Value / 100.0 ?? 1.0;
-                            double gScale = state.Sliders.ElementAtOrDefault(1)?.Value / 100.0 ?? 1.0;
-                            double bScale = state.Sliders.ElementAtOrDefault(2)?.Value / 100.0 ?? 1.0;
-                            resultBmp = await Task.Run(() => ColorConverter.ApplyRgbChannelMultipliers(srcBmp, rScale, gScale, bScale), token).ConfigureAwait(false);
-                            break;
-                        }
+                        double rScale = state.Sliders.ElementAtOrDefault(0)?.Value / 100.0 ?? 1.0;
+                        double gScale = state.Sliders.ElementAtOrDefault(1)?.Value / 100.0 ?? 1.0;
+                        double bScale = state.Sliders.ElementAtOrDefault(2)?.Value / 100.0 ?? 1.0;
+                        resultBmp = await Task.Run(() => ColorConverter.ApplyRgbChannelMultipliers(srcBmp, rScale, gScale, bScale), token).ConfigureAwait(false);
+                        break;
                     case "HSV":
-                        {
-                            int hShift = state.Sliders.ElementAtOrDefault(0)?.Value ?? 0;
-                            double sScale = (state.Sliders.ElementAtOrDefault(1)?.Value ?? 100) / 100.0;
-                            double vScale = (state.Sliders.ElementAtOrDefault(2)?.Value ?? 100) / 100.0;
-                            resultBmp = await Task.Run(() => ColorConverter.ApplyHsvAdjustments(srcBmp, hShift, sScale, vScale), token).ConfigureAwait(false);
-                            break;
-                        }
-                    case "CMYK":
-                        {
-                            double c = (state.Sliders.ElementAtOrDefault(0)?.Value ?? 100) / 100.0;
-                            double m = (state.Sliders.ElementAtOrDefault(1)?.Value ?? 100) / 100.0;
-                            double y = (state.Sliders.ElementAtOrDefault(2)?.Value ?? 100) / 100.0;
-                            double k = (state.Sliders.ElementAtOrDefault(3)?.Value ?? 100) / 100.0;
-                            resultBmp = await Task.Run(() => ColorConverter.ApplyCmykAdjustments(srcBmp, c, m, y, k), token).ConfigureAwait(false);
-                            break;
-                        }
-                    case "YCbCr":
-                        {
-                            int yShift = state.Sliders.ElementAtOrDefault(0)?.Value ?? 0;
-                            int cbShift = state.Sliders.ElementAtOrDefault(1)?.Value ?? 0;
-                            int crShift = state.Sliders.ElementAtOrDefault(2)?.Value ?? 0;
-                            resultBmp = await Task.Run(() => ColorConverter.ApplyYcbcrAdjustments(srcBmp, yShift, cbShift, crShift), token).ConfigureAwait(false);
-                            break;
-                        }
-                    case "YUV":
-                        {
-                            int yShift = state.Sliders.ElementAtOrDefault(0)?.Value ?? 0;
-                            int uShift = state.Sliders.ElementAtOrDefault(1)?.Value ?? 0;
-                            int vShift = state.Sliders.ElementAtOrDefault(2)?.Value ?? 0;
-                            resultBmp = await Task.Run(() => ColorConverter.ApplyYuvAdjustments(srcBmp, yShift, uShift, vShift), token).ConfigureAwait(false);
-                            break;
-                        }
-                    case "LAB":
-                        {
-                            int lShift = state.Sliders.ElementAtOrDefault(0)?.Value ?? 0;
-                            int aShift = state.Sliders.ElementAtOrDefault(1)?.Value ?? 0;
-                            int bShift = state.Sliders.ElementAtOrDefault(2)?.Value ?? 0;
-                            resultBmp = await Task.Run(() => ColorConverter.ApplyLabAdjustments(srcBmp, lShift, aShift, bShift), token).ConfigureAwait(false);
-                            break;
-                        }
-                    default:
-                        resultBmp = new Bitmap(srcBmp);
+                        int hShift = state.Sliders.ElementAtOrDefault(0)?.Value ?? 0;
+                        double sScale = (state.Sliders.ElementAtOrDefault(1)?.Value ?? 100) / 100.0;
+                        double vScale = (state.Sliders.ElementAtOrDefault(2)?.Value ?? 100) / 100.0;
+                        resultBmp = await Task.Run(() => ColorConverter.ApplyHsvAdjustments(srcBmp, hShift, sScale, vScale), token).ConfigureAwait(false);
                         break;
                 }
             }
-            catch (OperationCanceledException)
-            {
-                srcBmp.Dispose();
-                return;
-            }
-            catch (Exception ex)
-            {
-                srcBmp.Dispose();
-                BeginInvoke((Action)(() => MessageBox.Show(this, $"Conversion failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)));
-                return;
-            }
-            finally
-            {
-                if (!ReferenceEquals(resultBmp, srcBmp))
-                    srcBmp.Dispose();
-            }
-
-            if (token.IsCancellationRequested)
-            {
-                resultBmp.Dispose();
-                return;
-            }
-
-            // Apply channel mask if any channel disabled
-            Bitmap masked = resultBmp;
-            if (!(state.KeepR && state.KeepG && state.KeepB))
-            {
-                try
-                {
-                    var tmp = await Task.Run(() => ColorConverter.ApplyRgbChannelMask(resultBmp, state.KeepR, state.KeepG, state.KeepB), token).ConfigureAwait(false);
-                    if (!ReferenceEquals(tmp, resultBmp))
-                    {
-                        masked = tmp;
-                        resultBmp.Dispose();
-                    }
-                }
-                catch (OperationCanceledException) { resultBmp.Dispose(); return; }
-            }
-
-            // Apply resizing if requested (percent not 100)
-            Bitmap finalBmp = masked;
-            if (state.WidthPct != 100 || state.HeightPct != 100)
-            {
-                try
-                {
-                    var tmp = await Task.Run(() => ColorConverter.ResizeBitmap(masked, state.WidthPct, state.HeightPct), token).ConfigureAwait(false);
-                    if (!ReferenceEquals(tmp, masked))
-                    {
-                        finalBmp = tmp;
-                        masked.Dispose();
-                    }
-                }
-                catch (OperationCanceledException) { masked.Dispose(); return; }
-            }
-
-            if (token.IsCancellationRequested)
-            {
-                finalBmp.Dispose();
-                return;
-            }
+            catch (Exception) { srcBmp.Dispose(); return; }
 
             BeginInvoke((Action)(() =>
             {
                 var old = pictureBox.Image;
-                pictureBox.Image = finalBmp;
+                pictureBox.Image = resultBmp;
                 old?.Dispose();
-                statusLabel.Text = $"{Path.GetFileName(currentImagePath ?? string.Empty)} - {finalBmp.Width}x{finalBmp.Height}";
-                dragDropLabel.Visible = pictureBox.Image == null;
-
-                if (finalBmp != null)
-                {
-                    colorSpaceVisualizer.SetImage(finalBmp);
-                    UpdateCurrentImageInfo(finalBmp);
-                }
+                colorSpaceVisualizer.SetImage(resultBmp);
+                UpdateCurrentImageInfo(resultBmp);
             }));
         }
 
         private void OpenItem_Click(object? sender, EventArgs e)
         {
             using var ofd = new OpenFileDialog();
-            ofd.Filter = "Image Files|*.bmp;*.png;*.jpg;*.jpeg;*.gif;*.tiff;*.webp";
-            if (ofd.ShowDialog() == DialogResult.OK)
+            ofd.Filter = "Image Files|*.bmp;*.png;*.jpg;*.jpeg;";
+            if (ofd.ShowDialog() == DialogResult.OK) { LoadImage(ofd.FileName); }
+        }
+
+        private void LoadImage(string filePath)
+        {
+            try
             {
-                LoadImage(ofd.FileName);
+                _originalFilePath = filePath;
+                currentImagePath = filePath;
+                var img = Image.FromFile(filePath);
+                lock (this) { originalImage = img; }
+                BeginInvoke((Action)(() =>
+                {
+                    pictureBox.Image = new Bitmap(img);
+                    dragDropLabel.Visible = false;
+                    colorSpaceVisualizer.SetImage((Bitmap)pictureBox.Image);
+                    UpdateCurrentImageInfo((Bitmap)pictureBox.Image);
+                }));
             }
+            catch (Exception ex) { MessageBox.Show($"Failed to load image: {ex.Message}"); }
+        }
+
+        private void UpdateCurrentImageInfo(Bitmap bmp)
+        {
+            imageInfoLabel.Text = $"Dimensions: {bmp.Width} x {bmp.Height}\nFormat: {bmp.PixelFormat}";
         }
 
         private void ResetItem_Click(object? sender, EventArgs e)
@@ -592,271 +842,14 @@ namespace WinFormsApp1
             if (originalImage != null)
             {
                 applyCts?.Cancel();
-                SetPictureImage((Image)originalImage.Clone());
-                UpdateCurrentImageInfo((Image)originalImage.Clone());
-                statusLabel.Text = $"Restored: {Path.GetFileName(currentImagePath ?? string.Empty)}";
+                pictureBox.Image = new Bitmap(originalImage);
+                colorSpaceVisualizer.SetImage((Bitmap)pictureBox.Image);
             }
         }
 
-        private void SaveItem_Click(object? sender, EventArgs e)
-        {
-            if (pictureBox.Image == null)
-            {
-                MessageBox.Show("لا توجد صورة للحفظ!", "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            using var sfd = new SaveFileDialog();
-            sfd.Title = "حفظ الصورة المعدلة";
-            sfd.Filter = "PNG Image (*.png)|*.png|JPEG Image (*.jpg)|*.jpg|BMP Image (*.bmp)|*.bmp";
-            sfd.FilterIndex = 1;
-            sfd.FileName = Path.GetFileNameWithoutExtension(currentImagePath ?? "image") + "_edited";
-
-            if (sfd.ShowDialog() == DialogResult.OK)
-            {
-                try
-                {
-                    Bitmap bmp = new Bitmap(pictureBox.Image.Width, pictureBox.Image.Height);
-                    using (Graphics g = Graphics.FromImage(bmp))
-                    {
-                        g.DrawImage(pictureBox.Image, 0, 0, bmp.Width, bmp.Height);
-                    }
-
-                    ImageFormat format = sfd.FilterIndex switch
-                    {
-                        1 => ImageFormat.Png,
-                        2 => ImageFormat.Jpeg,
-                        3 => ImageFormat.Bmp,
-                        _ => ImageFormat.Png
-                    };
-
-                    bmp.Save(sfd.FileName, format);
-                    bmp.Dispose();
-
-                    MessageBox.Show($"تم حفظ الصورة بنجاح!", "تم الحفظ", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    statusLabel.Text = $"Saved: {Path.GetFileName(sfd.FileName)}";
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"فشل حفظ الصورة: {ex.Message}", "خطأ", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-        }
-
-        private void PixelLabMainForm_DragEnter(object? sender, DragEventArgs e)
-        {
-            if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop))
-            {
-                var files = (string[])e.Data.GetData(DataFormats.FileDrop)!;
-                if (files.Length > 0 && IsImageFile(files[0]))
-                {
-                    e.Effect = DragDropEffects.Copy;
-                    return;
-                }
-            }
-            e.Effect = DragDropEffects.None;
-        }
-
-        private void PixelLabMainForm_DragDrop(object? sender, DragEventArgs e)
-        {
-            if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop))
-            {
-                var files = (string[])e.Data.GetData(DataFormats.FileDrop)!;
-                if (files.Length > 0 && IsImageFile(files[0]))
-                {
-                    LoadImage(files[0]);
-                }
-            }
-        }
-
-        private void PictureBox_MouseMove(object? sender, MouseEventArgs e)
-        {
-            if (pictureBox.Image == null)
-            {
-                dragDropLabel.Visible = true;
-                statusLabel.Text = "No image loaded";
-                return;
-            }
-
-            dragDropLabel.Visible = false;
-
-            var img = pictureBox.Image;
-            var imgRect = GetImageRectangle(pictureBox);
-            if (!imgRect.Contains(e.Location))
-            {
-                statusLabel.Text = $"{Path.GetFileName(currentImagePath ?? string.Empty)} - {img.Width}x{img.Height}";
-                return;
-            }
-
-            var ix = (int)((e.X - imgRect.X) * (double)img.Width / imgRect.Width);
-            var iy = (int)((e.Y - imgRect.Y) * (double)img.Height / imgRect.Height);
-            if (ix >= 0 && iy >= 0 && ix < img.Width && iy < img.Height)
-            {
-                if (img is Bitmap bmp)
-                {
-                    var color = bmp.GetPixel(ix, iy);
-                    statusLabel.Text = $"{Path.GetFileName(currentImagePath ?? string.Empty)} - {img.Width}x{img.Height} | ({ix},{iy}) R:{color.R} G:{color.G} B:{color.B}";
-                }
-            }
-        }
-
-        private static Rectangle GetImageRectangle(PictureBox pb)
-        {
-            if (pb.Image == null) return Rectangle.Empty;
-            var img = pb.Image;
-            var imgRatio = (double)img.Width / img.Height;
-            var pbRatio = (double)pb.ClientSize.Width / pb.ClientSize.Height;
-            if (pbRatio > imgRatio)
-            {
-                var height = pb.ClientSize.Height;
-                var width = (int)(height * imgRatio);
-                var x = (pb.ClientSize.Width - width) / 2;
-                return new Rectangle(x, 0, width, height);
-            }
-            else
-            {
-                var width = pb.ClientSize.Width;
-                var height = (int)(width / imgRatio);
-                var y = (pb.ClientSize.Height - height) / 2;
-                return new Rectangle(0, y, width, height);
-            }
-        }
-
-        private static bool IsImageFile(string path)
-        {
-            var ext = Path.GetExtension(path).ToLowerInvariant();
-            return ext is ".bmp" or ".png" or ".jpg" or ".jpeg" or ".gif" or ".tiff" or ".webp";
-        }
-
-        private void LoadImage(string path)
-        {
-            try
-            {
-                var bytes = File.ReadAllBytes(path);
-                using var ms = new MemoryStream(bytes);
-                var img = Image.FromStream(ms);
-
-                originalImage?.Dispose();
-                originalImage = (Image)img.Clone();
-                currentImagePath = path;
-                _originalFilePath = path;
-
-                SetPictureImage(img);
-                UpdateCurrentImageInfo(img);
-                statusLabel.Text = $"{Path.GetFileName(path)} - {img.Width}x{img.Height}";
-
-                foreach (ToolStripMenuItem menu in menuStrip.Items)
-                {
-                    if (menu.Text == "File")
-                    {
-                        foreach (ToolStripItem item in menu.DropDownItems)
-                        {
-                            if (item.Text == "Reset")
-                                item.Enabled = true;
-
-                            if (item.Text == "Save As...")
-                                item.Enabled = true;
-                        }
-                    }
-                }
-
-                ScheduleApplyChanges();
-                colorSpaceVisualizer.SetImage((Bitmap)img);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Failed to load image:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-
-        }
-
-        private void SetPictureImage(Image img)
-        {
-            var old = pictureBox.Image;
-            pictureBox.Image = img;
-            old?.Dispose();
-            dragDropLabel.Visible = pictureBox.Image == null;
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                applyCts?.Cancel();
-                pictureBox.Image?.Dispose();
-                originalImage?.Dispose();
-            }
-            base.Dispose(disposing);
-        }
-
-        private void InitializeComponent()
-        {
-            this.colorSpaceVisualizer = new WinFormsApp1.ColorSpaceVisualizer();
-            this.SuspendLayout();
-            // 
-            // colorSpaceVisualizer
-            // 
-            this.colorSpaceVisualizer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(25)))), ((int)(((byte)(25)))), ((int)(((byte)(25)))));
-            this.colorSpaceVisualizer.Location = new System.Drawing.Point(599, 73);
-            this.colorSpaceVisualizer.Name = "colorSpaceVisualizer";
-            this.colorSpaceVisualizer.Size = new System.Drawing.Size(320, 320);
-            this.colorSpaceVisualizer.TabIndex = 0;
-            this.colorSpaceVisualizer.Load += new System.EventHandler(this.colorSpaceVisualizer1_Load);
-            this.colorSpaceVisualizer.Resize += new System.EventHandler(this.colorSpaceVisualizer_Resize);
-            // 
-            // PixelLabMainForm
-            // 
-            this.ClientSize = new System.Drawing.Size(672, 330);
-            this.Controls.Add(this.colorSpaceVisualizer);
-            this.Name = "PixelLabMainForm";
-            this.ResumeLayout(false);
-
-        }
-
-        private void colorSpaceVisualizer1_Load(object sender, EventArgs e)
-        {
-
-        }
-
-        private void colorSpaceVisualizer_Resize(object sender, EventArgs e)
-        {
-            int width = colorSpaceVisualizer.Width;
-            int height = colorSpaceVisualizer.Height;
-
-            if (height == 0) height = 1; 
-
-            double aspectRatio = (double)width / height;
-
-
-            colorSpaceVisualizer.Invalidate();
-        }
-
-        private void UpdateCurrentImageInfo(Image img)
-        {
-            if (img == null)
-            {
-                imageInfoLabel.Text = "لا توجد صورة";
-                return;
-            }
-
-            var sb = new System.Text.StringBuilder();
-
-            if (!string.IsNullOrEmpty(_originalFilePath))
-            {
-                var fileInfo = new FileInfo(_originalFilePath);
-                sb.AppendLine($"{Path.GetFileName(_originalFilePath)}");
-                sb.AppendLine($"{img.Width} x {img.Height}");
-                sb.AppendLine($"{fileInfo.Length / 1024} KB");
-            }
-            else
-            {
-                sb.AppendLine($"{img.Width} x {img.Height}");
-            }
-
-            sb.AppendLine($"{img.PixelFormat}");
-            sb.AppendLine($"بكسل: {img.Width * img.Height:N0}");
-
-            imageInfoLabel.Text = sb.ToString();
-        }
+        private void SaveItem_Click(object? sender, EventArgs e) { }
+        private void PixelLabMainForm_DragEnter(object? sender, DragEventArgs e) { if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy; }
+        private void PixelLabMainForm_DragDrop(object? sender, DragEventArgs e) { var files = (string[])e.Data.GetData(DataFormats.FileDrop); if (files.Length > 0) LoadImage(files[0]); }
+        private void PictureBox_MouseMove(object? sender, MouseEventArgs e) { }
     }
 }
