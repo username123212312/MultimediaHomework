@@ -109,6 +109,13 @@ namespace WinFormsApp1
                         pointY = ((m - k) * 255.0) - 128;
                         pointZ = ((yColor - k) * 255.0) - 128;
                     }
+                    else if (currentSystem == "LAB")
+                    {
+                        RgbToLab(r, gChan, b, out double l, out double a, out double bl);
+                        pointX = a * 1.5;
+                        pointY = (l - 50) * 1.5;
+                        pointZ = bl * 1.5;
+                    }
                     else 
                     {
                         pointX = r - 128;
@@ -123,9 +130,12 @@ namespace WinFormsApp1
                     float finalScreenX = (float)(centerX + (rotatedX2 * zoomScale));
                     float finalScreenY = (float)(centerY - (rotatedY1 * zoomScale));
 
-                    using (var brush = new SolidBrush(Color.FromArgb(120, r, gChan, b))) // 120 هي الشفافية
+                    float size = 3.0f + (float)(rotatedZ1 * 0.005);
+                    if (size < 1.0f) size = 1.0f; 
+
+                    using (var brush = new SolidBrush(Color.FromArgb(120, r, gChan, b)))
                     {
-                        g.FillRectangle(brush, finalScreenX, finalScreenY, 4, 4);
+                        g.FillRectangle(brush, finalScreenX, finalScreenY, size, size);
                     }
                 }
             }
@@ -137,6 +147,11 @@ namespace WinFormsApp1
             else if (currentSystem == "YCbCr" || currentSystem == "YUV")
             {
                 Draw2DPlanesOutline(g, centerX, centerY); 
+            }
+            else if (currentSystem == "LAB")
+            {
+
+                DrawSphereOutline(g, centerX, centerY);
             }
             else
             {
@@ -310,6 +325,60 @@ namespace WinFormsApp1
             if (e.Delta > 0) zoomScale += 0.05f;
             else if (e.Delta < 0 && zoomScale > 0.1f) zoomScale -= 0.05f;
             this.Refresh();
+        }
+
+        private void RgbToLab(byte r, byte g, byte b, out double l, out double a, out double bl)
+        {
+            double var_R = (r / 255.0);
+            double var_G = (g / 255.0);
+            double var_B = (b / 255.0);
+
+            var_R = (var_R > 0.04045) ? Math.Pow((var_R + 0.055) / 1.055, 2.4) : var_R / 12.92;
+            var_G = (var_G > 0.04045) ? Math.Pow((var_G + 0.055) / 1.055, 2.4) : var_G / 12.92;
+            var_B = (var_B > 0.04045) ? Math.Pow((var_B + 0.055) / 1.055, 2.4) : var_B / 12.92;
+
+            double X = (var_R * 0.4124 + var_G * 0.3576 + var_B * 0.1805) * 100;
+            double Y = (var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722) * 100;
+            double Z = (var_R * 0.0193 + var_G * 0.1192 + var_B * 0.9505) * 100;
+
+            double refX = 95.047; double refY = 100.000; double refZ = 108.883;
+            double x = X / refX; double y = Y / refY; double z = Z / refZ;
+
+            x = (x > 0.008856) ? Math.Pow(x, 1.0 / 3.0) : (7.787 * x) + (16.0 / 116.0);
+            y = (y > 0.008856) ? Math.Pow(y, 1.0 / 3.0) : (7.787 * y) + (16.0 / 116.0);
+            z = (z > 0.008856) ? Math.Pow(z, 1.0 / 3.0) : (7.787 * z) + (16.0 / 116.0);
+
+            l = (116 * y) - 16;
+            a = 500 * (x - y);
+            bl = 200 * (y - z);
+        }
+        private void DrawSphereOutline(Graphics g, int cx, int cy)
+        {
+            using (Pen p = new Pen(Color.FromArgb(100, Color.White), 1))
+            {
+                int segments = 16;
+                int rings = 8; 
+                int radius = 128; 
+
+                for (int j = -rings; j <= rings; j++)
+                {
+                    double latAngle = (j * Math.PI) / (rings * 2);
+                    double currentY = radius * Math.Sin(latAngle);
+                    double currentR = radius * Math.Cos(latAngle);
+
+                    PointF[] points = new PointF[segments];
+                    for (int i = 0; i < segments; i++)
+                    {
+                        double longAngle = (i * 2 * Math.PI) / segments;
+                        double x = currentR * Math.Cos(longAngle);
+                        double z = currentR * Math.Sin(longAngle);
+                        points[i] = ProjectPoint(x, currentY, z, cx, cy);
+                    }
+
+                    for (int i = 0; i < segments; i++)
+                        g.DrawLine(p, points[i], points[(i + 1) % segments]);
+                }
+            }
         }
     }
 }
